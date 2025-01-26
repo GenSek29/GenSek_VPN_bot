@@ -1,6 +1,0 @@
-services:
-  - type: worker
-    name: gen-sek-bot
-    env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "python GenSek_VPN_bot.py"
