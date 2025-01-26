@@ -1,37 +1,38 @@
-from flask import Flask
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from flask import Flask, request
+from telegram import Bot, Update
+from telegram.ext import CommandHandler, Dispatcher
 import os
-import logging
 
-# Создаем приложение Flask
 app = Flask(__name__)
 
 # Получаем токен из переменной окружения
 token = os.getenv('TELEGRAM_TOKEN')
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("Привет, я твой бот!")
+# Создаем объект бота
+bot = Bot(token)
 
-@app.route('/')
-def index():
-    return 'Бот работает!'
+# Инициализируем диспетчер
+dispatcher = Dispatcher(bot, None, workers=0)
 
-def main():
-    # Используем Application вместо Updater
-    application = Application.builder().token(token).build()
+# Обработчик команды /start
+def start(update, context):
+    update.message.reply_text("Привет, я твой бот!")
 
-    # Регистрируем обработчик команды /start
-    application.add_handler(CommandHandler("start", start))
+# Регистрируем обработчик команды /start
+dispatcher.add_handler(CommandHandler("start", start))
 
-    # Запускаем polling
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    # Получаем обновления от Telegram
+    json_str = request.get_data().decode("UTF-8")
+    update = Update.de_json(json_str, bot)
+    dispatcher.process_update(update)
+    return "OK"
 
 if __name__ == '__main__':
+    # Устанавливаем webhook
+    webhook_url = os.getenv('WEBHOOK_URL')  # Например, URL твоего приложения на Render
+    bot.set_webhook(url=webhook_url + '/webhook')
+
     # Запускаем Flask сервер
-    from threading import Thread
-    thread = Thread(target=lambda: app.run(host='0.0.0.0', port=5000))
-    thread.start()
-    
-    # Запускаем polling для бота
-    main()
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
