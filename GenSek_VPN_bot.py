@@ -1,24 +1,26 @@
-from telegram.ext import Updater, CommandHandler
+from telegram import Update
+from telegram.ext import Application, CommandHandler, ContextTypes
 import os
 
 # Получаем токен из переменной окружения
 token = os.getenv('TELEGRAM_TOKEN')
 
-def start(update, context):
-    update.message.reply_text("Привет, я твой бот!")
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text("Привет, я твой бот!")
 
 def main():
-    updater = Updater(token, use_context=True)
+    # Используем Application вместо Updater
+    application = Application.builder().token(token).build()
 
-    dp = updater.dispatcher
-    dp.add_handler(CommandHandler("start", start))
+    # Регистрируем обработчик команды /start
+    application.add_handler(CommandHandler("start", start))
 
-    # Используем метод polling, который не требует открытия порта
-    updater.start_polling()
-    updater.idle()
+    # Запускаем polling
+    application.run_polling()
 
 if __name__ == '__main__':
     main()
+
 
 
 
