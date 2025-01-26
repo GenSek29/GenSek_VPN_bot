@@ -54,9 +54,13 @@ def webhook():
     return "OK"
 
 if __name__ == '__main__':
-    # Устанавливаем webhook
-    webhook_url = os.getenv('WEBHOOK_URL')  # Например, URL твоего приложения на Render
-    application.bot.set_webhook(url=webhook_url + '/webhook')
+    # Устанавливаем webhook асинхронно
+    async def set_webhook():
+        webhook_url = os.getenv('WEBHOOK_URL')  # Например, URL твоего приложения на Render
+        await application.bot.set_webhook(url=webhook_url + '/webhook')
+
+    import asyncio
+    asyncio.run(set_webhook())
 
     # Запускаем Flask сервер
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
